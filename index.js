@@ -1,6 +1,6 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-require('dotenv').config();
 const uploadRoute = require('./routes/upload');
 
 const app = express();
@@ -16,3 +16,5 @@ app.use('/upload', uploadRoute);
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}/`);
 });
+
+

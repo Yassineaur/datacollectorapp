@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Record Audio</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+        p {
+            font-size: 16px;
+            margin: 10px 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .label-button {
+            background-color: #28a745;
+            margin: 5px;
+        }
+        .label-button:disabled {
+            background-color: #ccc;
+        }
+        audio {
+            margin: 20px;
+            width: 90%;
+            max-width: 600px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        .label-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .label-buttons button {
+            flex: 1;
+            padding: 10px;
+            max-width: 60px;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 16px;
+            color: green;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 20px;
+            }
+            p {
+                font-size: 14px;
+            }
+            button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+            .label-buttons button {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://markjivko.com/dist/recorder.js"></script>
+    <script>
+        jQuery(document).ready(function () {
+            var $ = jQuery;
+            var myRecorder = {
+                objects: {
+                    context: null,
+                    stream: null,
+                    recorder: null
+                },
+                init: function () {
+                    if (null === myRecorder.objects.context) {
+                        myRecorder.objects.context = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                },
+                start: function () {
+                    var options = { audio: true, video: false };
+                    navigator.mediaDevices
+                        .getUserMedia(options)
+                        .then(function (stream) {
+                            myRecorder.objects.stream = stream;
+                            myRecorder.objects.recorder = new Recorder(
+                                myRecorder.objects.context.createMediaStreamSource(stream),
+                                { numChannels: 1 }
+                            );
+                            myRecorder.objects.recorder.record();
+                        })
+                        .catch(function (err) {});
+                },
+                stop: function () {
+                    if (null !== myRecorder.objects.stream) {
+                        myRecorder.objects.stream.getAudioTracks()[0].stop();
+                    }
+                    if (null !== myRecorder.objects.recorder) {
+                        myRecorder.objects.recorder.stop();
+
+                        myRecorder.objects.recorder.exportWAV(function (blob) {
+                            var url = (window.URL || window.webkitURL).createObjectURL(blob);
+                            document.getElementById('audioPlayback').src = url;
+
+                            var reader = new FileReader();
+                            reader.readAsDataURL(blob);
+                            reader.onloadend = function () {
+                                var base64AudioData = reader.result.split(',')[1];
+                                document.getElementById('audioData').value = base64AudioData;
+                                console.log('Base64 Audio Data:', base64AudioData);
+                            };
+                        });
+                    }
+                }
+            };
+
+            $('#recordButton').click(function () {
+                myRecorder.init();
+                var buttonState = !!$(this).attr("data-recording");
+                if (!buttonState) {
+                    $(this).attr("data-recording", "true");
+                    $(this).text("Stop");
+                    myRecorder.start();
+                } else {
+                    $(this).attr("data-recording", "");
+                    $(this).text("Record");
+                    myRecorder.stop();
+                }
+            });
+
+            $('.label-button').click(function () {
+                var label = $(this).text();
+                document.getElementById('label').value = label;
+                $('.label-button').prop('disabled', false);
+                $(this).prop('disabled', true);
+            });
+
+            $('#uploadForm').submit(function (event) {
+                event.preventDefault();
+                $.ajax({
+                    url: '/upload',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        $('#message').text(response.message);
+                    },
+                    error: function (xhr, status, error) {
+                        $('#message').text('Error: ' + error);
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Record Audio</h1>
+    <p>Say a number between 1 and 10 in Darija, then label it.</p>
+    <button id="recordButton">Record</button>
+    <audio id="audioPlayback" controls></audio>
+    <form id="uploadForm">
+        <input type="hidden" name="audioData" id="audioData">
+        <input type="hidden" name="label" id="label">
+        <div class="label-buttons">
+            <button type="button" class="label-button">1</button>
+            <button type="button" class="label-button">2</button>
+            <button type="button" class="label-button">3</button>
+            <button type="button" class="label-button">4</button>
+            <button type="button" class="label-button">5</button>
+        </div>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="message"></div>
+</body>
+</html>

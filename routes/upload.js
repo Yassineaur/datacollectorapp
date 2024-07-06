@@ -32,7 +32,6 @@ router.post('/', upload.none(), async (req, res) => {
             });
         });
 
-        // Save metadata to MongoDB
         const client = new MongoClient(mongoUrl);
         await client.connect();
         const db = client.db('audio_data');

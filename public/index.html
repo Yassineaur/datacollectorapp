@@ -145,6 +145,7 @@
             };
 
             $('#recordButton').click(function () {
+                $('#message').text("");
                 myRecorder.init();
                 var buttonState = !!$(this).attr("data-recording");
                 if (!buttonState) {
@@ -183,9 +184,10 @@
     </script>
 </head>
 <body>
-    <h1>Record Audio</h1>
-    <p>Say a number between 1 and 10 in Darija, then label it.</p>
-    <button id="recordButton">Record</button>
+    
+    <h2>قول رقم بين 1 و 5 بالدّارجة،من بعد ضغط على الرقم اللي قلتي</h2>
+    <button id="recordButton">  سجّل الصوت
+    </button>
     <audio id="audioPlayback" controls></audio>
     <form id="uploadForm">
         <input type="hidden" name="audioData" id="audioData">
@@ -197,7 +199,7 @@
             <button type="button" class="label-button">4</button>
             <button type="button" class="label-button">5</button>
         </div>
-        <button type="submit">Upload</button>
+        <button type="submit">أرسل</button>
     </form>
     <div id="message"></div>
 </body>

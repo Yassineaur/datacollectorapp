@@ -39,7 +39,7 @@ router.post('/', upload.none(), async (req, res) => {
         const collection = db.collection('recordings');
         await collection.insertOne({ blobName, label });
 
-        res.json({ message: 'Merci! :)' });
+        res.json({ message: ' (: !شكراً' });
     } catch (error) {
         console.error('Error uploading file:', error);
         res.status(500).json({ message: 'Erreur' });
